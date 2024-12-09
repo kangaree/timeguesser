@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Time Guesser</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+      }
+
+      h1 {
+        color: #444;
+      }
+
+      .container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 80%;
+        max-width: 500px;
+        text-align: center;
+      }
+
+      .game-info {
+        margin-bottom: 20px;
+      }
+
+      .info-item {
+        font-size: 20px;
+        margin: 10px 0;
+      }
+
+      input[type="number"] {
+        padding: 10px;
+        font-size: 16px;
+        width: 100px;
+        margin-top: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+
+      button {
+        padding: 10px 20px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        background-color: #218838;
+      }
+
+      .result {
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .correct {
+        color: green;
+      }
+
+      .incorrect {
+        color: red;
+      }
+
+      .next-button {
+        margin-top: 20px;
+        background-color: #007bff;
+      }
+
+      .next-button:hover {
+        background-color: #0056b3;
+      }
+
+      .score {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+
+      .round {
+        font-size: 16px;
+        margin-top: 10px;
+      }
+
+      .hint-button {
+        margin-top: 10px;
+        background-color: #ffc107;
+        color: black;
+      }
+
+      .hint-button:hover {
+        background-color: #e0a800;
+      }
+
+      #usedHints {
+        margin-top: 20px;
+        text-align: left;
+        font-size: 16px;
+        color: #333;
+        max-height: 150px;
+      }
+
+      #usedHints li {
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Time Guesser</h1>
+
+      <div class="game-info">
+        <div class="info-item" id="topSong">Top Song:</div>
+        <div class="info-item" id="topMovie">Top Movie:</div>
+      </div>
+
+      <input
+        type="number"
+        id="yearGuess"
+        placeholder="Enter year"
+        min="1900"
+        max="2024"
+      />
+      <button onclick="checkGuess()">Submit Guess</button>
+
+      <div id="hintsSection">
+        <button class="hint-button" onclick="requestHint('popularTV')">
+          Get Hint: Popular TV
+        </button>
+        <button class="hint-button" onclick="requestHint('culturalEvent')">
+          Get Hint: Cultural Event
+        </button>
+        <button class="hint-button" onclick="requestHint('fashionTrend')">
+          Get Hint: Fashion Trend
+        </button>
+        <button class="hint-button" onclick="requestHint('tech')">
+          Get Hint: Tech
+        </button>
+      </div>
+
+      <div class="result" id="result"></div>
+      <button
+        class="next-button"
+        id="nextButton"
+        onclick="nextRound()"
+        style="display: none"
+      >
+        Next Round
+      </button>
+
+      <div class="score" id="score">Score: 0</div>
+      <div class="round" id="round">Round: 1/5</div>
+
+      <div id="usedHints">
+        <h3>Hints Used:</h3>
+        <ul id="hintList"></ul>
+      </div>
+    </div>
+
+    <script>
+      const yearData = [
+        {
+          year: 1920,
+          topSong: "Swanee - Al Jolson",
+          topMovie: "The Cabinet of Dr. Caligari",
+          popularTV: "None",
+          fashionTrend: "Flapper dresses",
+          tech: "The first radio broadcast",
+          culturalEvent: "Prohibition begins",
+        },
+        {
+          year: 1921,
+          topSong: "Charleston - James P. Johnson",
+          topMovie: "The Kid",
+          popularTV: "None",
+          fashionTrend: "Flapper style",
+          tech: "Automobile mass production",
+          culturalEvent: "Women's right to vote in the U.S.",
+        },
+        {
+          year: 1922,
+          topSong: "Rhapsody in Blue - George Gershwin",
+          topMovie: "Nosferatu",
+          popularTV: "None",
+          fashionTrend: "Cloche hats, bobbed hair",
+          tech: "First commercial radio station",
+          culturalEvent: "The Great Depression begins to affect Europe",
+        },
+        {
+          year: 1923,
+          topSong: "Yes! We Have No Bananas - Frank Silver & Irving Cohn",
+          topMovie: "Safety Last!",
+          popularTV: "None",
+          fashionTrend: "Loose-fitting dresses",
+          tech: "First TV transmissions (experimental)",
+          culturalEvent: "The rise of jazz culture",
+        },
+        {
+          year: 1924,
+          topSong: "I Can't Give You Anything But Love - Louis Armstrong",
+          topMovie: "The Thief of Bagdad",
+          popularTV: "None",
+          fashionTrend: "Flapper dresses, bobbed hair",
+          tech: "First commercial radio broadcasting",
+          culturalEvent: "The first Macy's Thanksgiving Parade",
+        },
+        {
+          year: 1925,
+          topSong: "The Spanish Shawl - Paul Whiteman",
+          topMovie: "The Lost World",
+          popularTV: "None",
+          fashionTrend: "Bobbed hair, cloche hats",
+          tech: "First successful TV transmission (by John Logie Baird)",
+          culturalEvent: "The Scopes 'Monkey' Trial (evolution controversy)",
+        },
+        {
+          year: 1926,
+          topSong: "Five Foot Two, Eyes of Blue - Gene Austin",
+          topMovie: "The General",
+          popularTV: "None",
+          fashionTrend: "Flapper style, bobbed hair",
+          tech: "First radio broadcast of a sporting event",
+          culturalEvent: "The Great Mississippi Flood",
+        },
+        {
+          year: 1927,
+          topSong: "Puttin' On the Ritz - Irving Berlin",
+          topMovie: "Wings",
+          popularTV: "None",
+          fashionTrend: "Evening gowns, tuxedos",
+          tech: "First talkie film, *The Jazz Singer*",
+          culturalEvent: "Charles Lindbergh's first transatlantic flight",
+        },
+        {
+          year: 1928,
+          topSong: "Makin' Whoopee - Eddie Cantor",
+          topMovie: "The Passion of Joan of Arc",
+          popularTV: "None",
+          fashionTrend: "Flapper style, bobbed hair",
+          tech: "Invention of Scotch tape",
+          culturalEvent: "First Mickey Mouse cartoon, *Steamboat Willie*",
+        },
+        {
+          year: 1929,
+          topSong: "Ol' Man River - Paul Robeson",
+          topMovie: "The Broadway Melody",
+          popularTV: "None",
+          fashionTrend: "Dropped waistlines, cloche hats",
+          tech: "First television broadcasts",
+          culturalEvent: "Stock market crash triggers the Great Depression",
+        },
+        {
+          year: 1930,
+          topSong: "Body and Soul - Coleman Hawkins",
+          topMovie: "All Quiet on the Western Front",
+          popularTV: "None",
+          fashionTrend: "Elegant evening gowns, fur coats",
+          tech: "First synthetic rubber",
+          culturalEvent: "The Great Depression deepens",
+        },
+        {
+          year: 1931,
+          topSong: "Georgia on My Mind - Hoagy Carmichael",
+          topMovie: "Frankenstein",
+          popularTV: "None",
+          fashionTrend: "Thirties elegance",
+          tech: "First color motion picture system (Technicolor)",
+          culturalEvent: "Al Capone's conviction on tax evasion",
+        },
+        {
+          year: 1932,
+          topSong: "Night and Day - Cole Porter",
+          topMovie: "Dracula",
+          popularTV: "None",
+          fashionTrend: "Bias-cut dresses",
+          tech: "First electric refrigerator",
+          culturalEvent: "The Bonus Army marches on Washington",
+        },
+        {
+          year: 1933,
+          topSong: "Stormy Weather - Ethel Waters",
+          topMovie: "King Kong",
+          popularTV: "None",
+          fashionTrend: "Women's suits, cloche hats",
+          tech: "First modern TV demonstration",
+          culturalEvent: "The Great Depression worsens, New Deal begins",
+        },
+        {
+          year: 1934,
+          topSong:
+            "I'm Gonna Sit Right Down and Write Myself a Letter - Fats Waller",
+          topMovie: "It Happened One Night",
+          popularTV: "None",
+          fashionTrend: "Bold prints and patterns",
+          tech: "First major motion pictures using sound",
+          culturalEvent: "Bonnie and Clyde's crime spree",
+        },
+        {
+          year: 1935,
+          topSong: "Cheek to Cheek - Fred Astaire",
+          topMovie: "The 39 Steps",
+          popularTV: "None",
+          fashionTrend: "Flared skirts and dresses",
+          tech: "First color film at the Oscars",
+          culturalEvent: "The rise of labor unions in the U.S.",
+        },
+        {
+          year: 1936,
+          topSong: "The Way You Look Tonight - Fred Astaire",
+          topMovie: "Modern Times",
+          popularTV: "None",
+          fashionTrend: "Longer skirts, elegance",
+          tech: "First car radio installed",
+          culturalEvent: "Spanish Civil War begins",
+        },
+        {
+          year: 1937,
+          topSong: "That’s Why Darkies Were Born - Ethel Waters",
+          topMovie: "Snow White and the Seven Dwarfs",
+          popularTV: "None",
+          fashionTrend: "Formal evening wear",
+          tech: "First Disney animated film, *Snow White* released",
+          culturalEvent: "The Hindenburg disaster",
+        },
+        {
+          year: 1938,
+          topSong: "Begin the Beguine - Artie Shaw",
+          topMovie: "The Adventures of Robin Hood",
+          popularTV: "None",
+          fashionTrend: "Wide-shouldered suits",
+          tech: "First air conditioning system installed in a movie theater",
+          culturalEvent: "Kristallnacht (Night of Broken Glass) in Germany",
+        },
+        {
+          year: 1939,
+          topSong: "Over the Rainbow - Judy Garland",
+          topMovie: "The Wizard of Oz",
+          popularTV: "None",
+          fashionTrend: "Suits, evening gowns",
+          tech: "First color television transmission",
+          culturalEvent: "World War II begins in Europe",
+        },
+        {
+          year: 1940,
+          topSong: "In the Mood - Glenn Miller",
+          topMovie: "The Wizard of Oz",
+          popularTV: "None",
+          fashionTrend: "Utility fashion, simple cuts",
+          tech: "First electronic computers (ENIAC)",
+          culturalEvent: "Winston Churchill becomes Prime Minister of the UK",
+        },
+        {
+          year: 1941,
+          topSong: "Chattanooga Choo Choo - Glenn Miller",
+          topMovie: "Citizen Kane",
+          popularTV: "None",
+          fashionTrend: "Military-inspired clothing",
+          tech: "Radar technology advances",
+          culturalEvent: "Attack on Pearl Harbor, U.S. enters WWII",
+        },
+        {
+          year: 1942,
+          topSong: "White Christmas - Bing Crosby",
+          topMovie: "Casablanca",
+          popularTV: "None",
+          fashionTrend: "Rosie the Riveter and wartime uniforms",
+          tech: "Development of the jet engine",
+          culturalEvent: "The Battle of Midway turns tide in WWII",
+        },
+        {
+          year: 1943,
+          topSong: "I'll Be Seeing You - Bing Crosby",
+          topMovie: "Casablanca",
+          popularTV: "None",
+          fashionTrend: "Women's wartime fashion",
+          tech: "First operational jet aircraft",
+          culturalEvent: "Allied forces invade Italy",
+        },
+        {
+          year: 1944,
+          topSong: "Swinging on a Star - Bing Crosby",
+          topMovie: "Double Indemnity",
+          popularTV: "None",
+          fashionTrend: "Wartime simplicity",
+          tech: "V-2 rockets used in combat",
+          culturalEvent: "D-Day invasion of Normandy",
+        },
+        {
+          year: 1945,
+          topSong: "In the Mood - Glenn Miller",
+          topMovie: "The Lost Weekend",
+          popularTV: "None",
+          fashionTrend: "Post-war conservative styles",
+          tech: "Atomic bomb dropped on Hiroshima and Nagasaki",
+          culturalEvent: "End of WWII, UN founded",
+        },
+        {
+          year: 1946,
+          topSong: "The Woodpecker Song - Leo Arnaud",
+          topMovie: "The Best Years of Our Lives",
+          popularTV: "N/A (TV was still in early stages)",
+          fashionTrend:
+            "Post-war conservative styles, pencil skirts, and suits",
+          tech: "The first electronic computer (ENIAC) becomes operational",
+          culturalEvent: "End of World War II, Nuremberg Trials conclude",
+        },
+        {
+          year: 1947,
+          topSong: "Near You - Francis Craig",
+          topMovie: "It’s a Wonderful Life",
+          popularTV: "N/A (TV was still in early stages)",
+          fashionTrend:
+            "The New Look by Christian Dior (full skirts, narrow waistlines)",
+          tech: "Transistor radio is developed, beginning the era of portable radios",
+          culturalEvent: "The United Nations is formed; the Cold War begins",
+        },
+        {
+          year: 1948,
+          topSong: "Nature Boy - Nat King Cole",
+          topMovie: "Hamlet",
+          popularTV: "N/A (TV still in its infancy)",
+          fashionTrend:
+            "Full skirts, tailored suits, and the rise of casual wear",
+          tech: "First successful commercial computer (UNIVAC) is introduced",
+          culturalEvent:
+            "The Berlin Airlift, India gains independence from Britain",
+        },
+        {
+          year: 1949,
+          topSong: "Riders in the Sky - Vaughn Monroe",
+          topMovie: "All the King's Men",
+          popularTV: "N/A (TV is still expanding, but limited in viewership)",
+          fashionTrend: "Swing skirts, jackets with peplum waistlines",
+          tech: "The first computer-generated graphics (images) are created",
+          culturalEvent:
+            "NATO is established, the People's Republic of China is founded",
+        },
+        {
+          year: 1950,
+          topSong: "Goodnight Irene - The Weavers",
+          topMovie: "Cinderella",
+          popularTV: "I Love Lucy",
+          fashionTrend: "Full skirts, poodle skirts",
+          tech: "First credit cards introduced",
+          culturalEvent: "The Korean War begins",
+        },
+        {
+          year: 1951,
+          topSong: "How High the Moon - Les Paul and Mary Ford",
+          topMovie: "A Streetcar Named Desire",
+          popularTV: "I Love Lucy",
+          fashionTrend: "Poodle skirts, saddle shoes",
+          tech: "First color television broadcast",
+          culturalEvent: "The Rosenbergs executed for espionage",
+        },
+        {
+          year: 1952,
+          topSong: "Vaya Con Dios - Les Paul and Mary Ford",
+          topMovie: "Singin' in the Rain",
+          popularTV: "I Love Lucy",
+          fashionTrend: "Shirtdresses, full skirts",
+          tech: "First commercial transistor radio",
+          culturalEvent: "Dwight D. Eisenhower elected President",
+        },
+        {
+          year: 1953,
+          topSong: "The Song from Moulin Rouge - Percy Faith",
+          topMovie: "The Robe",
+          popularTV: "The Adventures of Ozzie and Harriet",
+          fashionTrend: "Poodle skirts, tailored suits",
+          tech: "First polio vaccine developed by Jonas Salk",
+          culturalEvent: "Korean War ends",
+        },
+        {
+          year: 1954,
+          topSong: "I Get Around - The Beach Boys",
+          topMovie: "On the Waterfront",
+          popularTV: "I Love Lucy",
+          fashionTrend: "Full skirts, casual wear",
+          tech: "First color TV commercial broadcast",
+          culturalEvent: "Brown v. Board of Education (school desegregation)",
+        },
+        {
+          year: 1955,
+          topSong: "Rock Around the Clock - Bill Haley & His Comets",
+          topMovie: "Rebel Without a Cause",
+          popularTV: "The Twilight Zone",
+          fashionTrend: "Leather jackets, jeans",
+          tech: "The first microwave oven for consumers",
+          culturalEvent: "Rosa Parks' arrest sparks the Montgomery Bus Boycott",
+        },
+        {
+          year: 1956,
+          topSong: "Heartbreak Hotel - Elvis Presley",
+          topMovie: "The Ten Commandments",
+          popularTV: "The Ed Sullivan Show",
+          fashionTrend: "Poodle skirts, varsity jackets",
+          tech: "First commercial transistor radio",
+          culturalEvent: "Elvis Presley appears on The Ed Sullivan Show",
+        },
+        {
+          year: 1957,
+          topSong: "All Shook Up - Elvis Presley",
+          topMovie: "The Bridge on the River Kwai",
+          popularTV: "The Twilight Zone",
+          fashionTrend: "Full skirts, bouffant hairdos",
+          tech: "First artificial satellite (Sputnik 1)",
+          culturalEvent: "Launch of Sputnik, beginning of the Space Race",
+        },
+        {
+          year: 1958,
+          topSong: "Nel Blu Dipinto di Blu (Volare) - Domenico Modugno",
+          topMovie: "Gigi",
+          popularTV: "The Twilight Zone",
+          fashionTrend: "Capri pants, bolero jackets",
+          tech: "First video recorder demonstrated",
+          culturalEvent: "The U.S. launches Explorer 1 satellite",
+        },
+        {
+          year: 1959,
+          topSong: "A Teenager in Love - Dion and the Belmonts",
+          topMovie: "Ben-Hur",
+          popularTV: "The Twilight Zone",
+          fashionTrend: "Miniskirts, sleek suits",
+          tech: "First Barbie doll is introduced",
+          culturalEvent: "The launch of the first Barbie doll",
+        },
+        {
+          year: 1960,
+          topSong: "It's Now or Never - Elvis Presley",
+          topMovie: "Ben-Hur",
+          popularTV: "The Twilight Zone",
+          fashionTrend: "Mod fashion, mini skirts",
+          tech: "First video game, *Spacewar!* developed",
+          culturalEvent: "John F. Kennedy elected President",
+        },
+        {
+          year: 1961,
+          topSong: "Tossin' and Turnin' - Bobby Lewis",
+          topMovie: "West Side Story",
+          popularTV: "The Twilight Zone",
+          fashionTrend: "Ponytails, shift dresses",
+          tech: "First manned space flight (Yuri Gagarin)",
+          culturalEvent: "Construction of the Berlin Wall begins",
+        },
+        {
+          year: 1962,
+          topSong: "The Twist - Chubby Checker",
+          topMovie: "Lawrence of Arabia",
+          popularTV: "The Twilight Zone",
+          fashionTrend: "Mod fashion, mini skirts",
+          tech: "First communication satellite, Telstar",
+          culturalEvent: "Cuban Missile Crisis",
+        },
+        {
+          year: 1963,
+          topSong: "Sugar Shack - Jimmy Gilmer and the Fireballs",
+          topMovie: "Cleopatra",
+          popularTV: "The Twilight Zone",
+          fashionTrend: "Shift dresses, beehive hairdos",
+          tech: "First video cassette recorder",
+          culturalEvent: "Assassination of President John F. Kennedy",
+        },
+        {
+          year: 1964,
+          topSong: "I Want to Hold Your Hand - The Beatles",
+          topMovie: "My Fair Lady",
+          popularTV: "The Ed Sullivan Show",
+          fashionTrend: "Mini skirts, go-go boots",
+          tech: "First laser used for surgery",
+          culturalEvent: "The Beatles' U.S. debut on Ed Sullivan Show",
+        },
+        {
+          year: 1965,
+          topSong:
+            "I Can't Help Myself (Sugar Pie Honey Bunch) - The Four Tops",
+          topMovie: "The Sound of Music",
+          popularTV: "The Twilight Zone",
+          fashionTrend: "Bell-bottom pants, mod fashion",
+          tech: "First handheld calculator",
+          culturalEvent: "The Voting Rights Act is signed into law",
+        },
+        {
+          year: 1966,
+          topSong: "Good Vibrations - The Beach Boys",
+          topMovie: "The Good, The Bad and The Ugly",
+          popularTV: "Star Trek",
+          fashionTrend: "Bell-bottom jeans, mini skirts",
+          tech: "First practical computer mouse",
+          culturalEvent: "Civil Rights Movement peaks",
+        },
+        {
+          year: 1967,
+          topSong: "Respect - Aretha Franklin",
+          topMovie: "The Graduate",
+          popularTV: "Star Trek",
+          fashionTrend: "Psychedelic prints, bell-bottoms",
+          tech: "First automated teller machine (ATM)",
+          culturalEvent: "The Summer of Love in San Francisco",
+        },
+        {
+          year: 1968,
+          topSong: "Hey Jude - The Beatles",
+          topMovie: "2001: A Space Odyssey",
+          popularTV: "Rowan & Martin's Laugh-In",
+          fashionTrend: "Flower power, hippie style",
+          tech: "First successful human heart transplant",
+          culturalEvent: "Assassination of Martin Luther King Jr.",
+        },
+        {
+          year: 1969,
+          topSong: "Sugar, Sugar - The Archies",
+          topMovie: "Easy Rider",
+          popularTV: "Sesame Street",
+          fashionTrend: "Tie-dye shirts, bell-bottoms",
+          tech: "The first moon landing (Apollo 11)",
+          culturalEvent: "Woodstock Festival",
+        },
+        {
+          year: 1970,
+          topSong: "Bridge Over Troubled Water - Simon & Garfunkel",
+          topMovie: "Love Story",
+          popularTV: "The Brady Bunch",
+          fashionTrend: "Bell-bottom jeans, wide collars",
+          tech: "First electronic pocket calculator",
+          culturalEvent: "The Kent State shootings",
+        },
+        {
+          year: 1971,
+          topSong: "Maggie May - Rod Stewart",
+          topMovie: "A Clockwork Orange",
+          popularTV: "All in the Family",
+          fashionTrend: "Flared pants, peasant tops",
+          tech: "The first email sent",
+          culturalEvent: "The Pentagon Papers leak",
+        },
+        {
+          year: 1972,
+          topSong: "I Can See Clearly Now - Johnny Nash",
+          topMovie: "The Godfather",
+          popularTV: "The Brady Bunch",
+          fashionTrend: "Bell-bottom jeans, polyester suits",
+          tech: "First video game console (Magnavox Odyssey)",
+          culturalEvent: "Watergate Scandal begins",
+        },
+        {
+          year: 1973,
+          topSong: "Tie a Yellow Ribbon Round the Ole Oak Tree - Dawn",
+          topMovie: "The Exorcist",
+          popularTV: "M*A*S*H",
+          fashionTrend: "Platform shoes, polyester",
+          tech: "First portable cell phone",
+          culturalEvent: "The U.S. withdraws from Vietnam",
+        },
+        {
+          year: 1974,
+          topSong: "The Way We Were - Barbra Streisand",
+          topMovie: "The Godfather Part II",
+          popularTV: "M*A*S*H",
+          fashionTrend: "Bell-bottoms, glam rock",
+          tech: "The first computer mouse for personal computers",
+          culturalEvent: "The Watergate Scandal leads to Nixon's resignation",
+        },
+        {
+          year: 1975,
+          topSong: "Love Will Keep Us Together - Captain & Tennille",
+          topMovie: "Jaws",
+          popularTV: "The Jeffersons",
+          fashionTrend: "Bell-bottom pants, platform shoes",
+          tech: "The release of Windows 1.0 by Microsoft",
+          culturalEvent: "End of the Vietnam War",
+        },
+        {
+          year: 1976,
+          topSong: "Disco Inferno - The Trammps",
+          topMovie: "Rocky",
+          popularTV: "Charlie’s Angels",
+          fashionTrend: "Flared pants, polyester",
+          tech: "The Apple I computer is released",
+          culturalEvent: "The Bicentennial celebrations in the U.S.",
+        },
+        {
+          year: 1977,
+          topSong: "I Will Survive - Gloria Gaynor",
+          topMovie: "Star Wars",
+          popularTV: "Happy Days",
+          fashionTrend: "Disco fashion, bell-bottoms",
+          tech: "First portable cassette player (Walkman)",
+          culturalEvent: "Star Wars revolutionizes cinema",
+        },
+        {
+          year: 1978,
+          topSong: "Stayin' Alive - Bee Gees",
+          topMovie: "Grease",
+          popularTV: "Mork & Mindy",
+          fashionTrend: "Disco fashion, polyester",
+          tech: "The release of the first home video game system (Atari 2600)",
+          culturalEvent: "The Jonestown Massacre",
+        },
+        {
+          year: 1979,
+          topSong: "My Sharona - The Knack",
+          topMovie: "Apocalypse Now",
+          popularTV: "The Dukes of Hazzard",
+          fashionTrend: "High-waisted jeans, leather jackets",
+          tech: "The Walkman becomes widely popular",
+          culturalEvent: "The Iranian Revolution",
+        },
+        {
+          year: 1980,
+          topSong: "Call Me - Blondie",
+          topMovie: "Star Wars: The Empire Strikes Back",
+          popularTV: "Dallas",
+          fashionTrend: "Power suits, parachute pants",
+          tech: "The first personal computer with a GUI (Apple Macintosh)",
+          culturalEvent: "The U.S. boycotts the Moscow Olympics",
+        },
+        {
+          year: 1981,
+          topSong: "Bette Davis Eyes - Kim Carnes",
+          topMovie: "Raiders of the Lost Ark",
+          popularTV: "The Dukes of Hazzard",
+          fashionTrend: "Leg warmers, mullets",
+          tech: "The launch of the first IBM PC",
+          culturalEvent: "The assassination attempt on Ronald Reagan",
+        },
+        {
+          year: 1982,
+          topSong: "Eye of the Tiger - Survivor",
+          topMovie: "E.T. the Extra-Terrestrial",
+          popularTV: "Knight Rider",
+          fashionTrend: "Acid-wash jeans, neon colors",
+          tech: "The first CD player released",
+          culturalEvent: "The Falklands War between the UK and Argentina",
+        },
+        {
+          year: 1983,
+          topSong: "Billie Jean - Michael Jackson",
+          topMovie: "Star Wars: Return of the Jedi",
+          popularTV: "The A-Team",
+          fashionTrend: "Shoulder pads, leather jackets",
+          tech: "The launch of the first mobile phone (Motorola DynaTAC)",
+          culturalEvent:
+            "The Internet's first domain name, Symbolics.com, is registered",
+        },
+        {
+          year: 1984,
+          topSong: "When Doves Cry - Prince",
+          topMovie: "Ghostbusters",
+          popularTV: "The Cosby Show",
+          fashionTrend: "Big hair, mullets",
+          tech: "The debut of the Apple Macintosh computer",
+          culturalEvent: "The Summer Olympics in Los Angeles",
+        },
+        {
+          year: 1985,
+          topSong: "Take On Me - A-ha",
+          topMovie: "Back to the Future",
+          popularTV: "Miami Vice",
+          fashionTrend: "Denim jackets, acid-wash jeans",
+          tech: "The first version of Windows is released",
+          culturalEvent: "Live Aid concerts for famine relief",
+        },
+        {
+          year: 1986,
+          topSong: "Say You, Say Me - Lionel Richie",
+          topMovie: "Top Gun",
+          popularTV: "The Golden Girls",
+          fashionTrend: "Off-the-shoulder tops, high-waisted jeans",
+          tech: "The first Nintendo Game Boy released",
+          culturalEvent: "The Chernobyl nuclear disaster",
+        },
+        {
+          year: 1987,
+          topSong: "I Wanna Dance with Somebody - Whitney Houston",
+          topMovie: "Fatal Attraction",
+          popularTV: "Married with Children",
+          fashionTrend: "Neon colors, oversized blazers",
+          tech: "The launch of the first HDTV broadcast",
+          culturalEvent: "The Iran-Contra Affair scandal",
+        },
+        {
+          year: 1988,
+          topSong: "Together Forever - Rick Astley",
+          topMovie: "Who Framed Roger Rabbit",
+          popularTV: "The Wonder Years",
+          fashionTrend: "Parachute pants, colorful sweaters",
+          tech: "The first cellular phone billboards",
+          culturalEvent: "George H.W. Bush elected President",
+        },
+        {
+          year: 1989,
+          topSong: "Another Day in Paradise - Phil Collins",
+          topMovie: "Batman",
+          popularTV: "Seinfeld",
+          fashionTrend: "Cross-color fashion, baggy pants",
+          tech: "The World Wide Web is publicly introduced",
+          culturalEvent: "The fall of the Berlin Wall",
+        },
+        {
+          year: 1990,
+          topSong: "Vogue - Madonna",
+          topMovie: "Home Alone",
+          popularTV: "The Simpsons",
+          fashionTrend: "Grunge, oversized shirts",
+          tech: "The first internet browser, WorldWideWeb, is released",
+          culturalEvent: "The Gulf War begins",
+        },
+        {
+          year: 1991,
+          topSong: "Everything I Do - Bryan Adams",
+          topMovie: "The Silence of the Lambs",
+          popularTV: "Friends",
+          fashionTrend: "Flannel shirts, baggy jeans",
+          tech: "The launch of the Linux operating system",
+          culturalEvent: "The collapse of the Soviet Union",
+        },
+        {
+          year: 1992,
+          topSong: "I Will Always Love You - Whitney Houston",
+          topMovie: "Aladdin",
+          popularTV: "The X-Files",
+          fashionTrend: "High-waisted jeans, crop tops",
+          tech: "First text message sent (SMS)",
+          culturalEvent: "Rodney King Riots in Los Angeles",
+        },
+        {
+          year: 1993,
+          topSong: "I Will Always Love You - Whitney Houston",
+          topMovie: "Jurassic Park",
+          popularTV: "Friends",
+          fashionTrend: "Plaid shirts, oversized jackets",
+          tech: "Launch of the first web browser, Mosaic",
+          culturalEvent: "Bill Clinton is elected President",
+        },
+        {
+          year: 1994,
+          topSong: "The Sign - Ace of Base",
+          topMovie: "Forrest Gump",
+          popularTV: "Friends",
+          fashionTrend: "Plaid flannel shirts, baggy jeans",
+          tech: "Launch of Yahoo!",
+          culturalEvent: "Nelson Mandela becomes President of South Africa",
+        },
+        {
+          year: 1995,
+          topSong: "Gangsta's Paradise - Coolio",
+          topMovie: "Toy Story",
+          popularTV: "Friends",
+          fashionTrend: "Grunge fashion, denim",
+          tech: "Windows 95 is released",
+          culturalEvent: "The Oklahoma City bombing",
+        },
+        {
+          year: 1996,
+          topSong: "Macarena - Los Del Rio",
+          topMovie: "Independence Day",
+          popularTV: "Friends",
+          fashionTrend: "Chokers, cargo pants",
+          tech: "The first DVD player is sold",
+          culturalEvent: "Dolly the sheep becomes the first cloned mammal",
+        },
+        {
+          year: 1997,
+          topSong: "Candle in the Wind 1997 - Elton John",
+          topMovie: "Titanic",
+          popularTV: "Friends",
+          fashionTrend: "Platform shoes, baggy pants",
+          tech: "Google is founded",
+          culturalEvent: "Princess Diana's death",
+        },
+        {
+          year: 1998,
+          topSong: "Too Close - Next",
+          topMovie: "Saving Private Ryan",
+          popularTV: "Friends",
+          fashionTrend: "Flared jeans, tube tops",
+          tech: "Launch of the iMac",
+          culturalEvent: "The Monica Lewinsky scandal",
+        },
+        {
+          year: 1999,
+          topSong: "Baby One More Time - Britney Spears",
+          topMovie: "The Matrix",
+          popularTV: "Friends",
+          fashionTrend: "Low-rise jeans, crop tops",
+          tech: "The rise of Napster and digital music",
+          culturalEvent: "Y2K scare",
+        },
+        {
+          year: 2000,
+          topSong: "Breathe - Faith Hill",
+          topMovie: "Gladiator",
+          popularTV: "Survivor",
+          fashionTrend: "Cargo pants, trucker hats",
+          tech: "The dot-com bubble bursts",
+          culturalEvent: "The Y2K bug doesn't cause widespread problems",
+        },
+        {
+          year: 2001,
+          topSong: "Lady Marmalade - Christina Aguilera, Lil' Kim, Mýa, Pink",
+          topMovie: "The Lord of the Rings: The Fellowship of the Ring",
+          popularTV: "Friends",
+          fashionTrend: "Low-rise jeans, butterfly clips",
+          tech: "The first iPod is released",
+          culturalEvent: "September 11 terrorist attacks",
+        },
+        {
+          year: 2002,
+          topSong: "Hot in Herre - Nelly",
+          topMovie: "Spider-Man",
+          popularTV: "American Idol",
+          fashionTrend: "Cargo pants, trucker hats",
+          tech: "Facebook is launched",
+          culturalEvent: "The U.S. invades Iraq",
+        },
+        {
+          year: 2003,
+          topSong: "Crazy in Love - Beyoncé ft. Jay-Z",
+          topMovie: "The Lord of the Rings: The Return of the King",
+          popularTV: "Friends",
+          fashionTrend: "Low-rise jeans, tank tops",
+          tech: "The first iTunes store is launched",
+          culturalEvent: "The Columbia Space Shuttle disaster",
+        },
+        {
+          year: 2004,
+          topSong: "Yeah! - Usher ft. Lil Jon & Ludacris",
+          topMovie: "Shrek 2",
+          popularTV: "The OC",
+          fashionTrend: "Flared jeans, trucker hats",
+          tech: "Facebook is launched",
+          culturalEvent: "The Indian Ocean tsunami",
+        },
+        {
+          year: 2005,
+          topSong: "Hollaback Girl - Gwen Stefani",
+          topMovie: "Star Wars: Episode III - Revenge of the Sith",
+          popularTV: "Desperate Housewives",
+          fashionTrend: "Skinny jeans, Ugg boots",
+          tech: "YouTube is launched",
+          culturalEvent: "Hurricane Katrina",
+        },
+        {
+          year: 2006,
+          topSong: "Bad Day - Daniel Powter",
+          topMovie: "Pirates of the Caribbean: Dead Man's Chest",
+          popularTV: "Grey's Anatomy",
+          fashionTrend: "Skinny jeans, hoodies",
+          tech: "Twitter is launched",
+          culturalEvent: "Twitter's first tweet",
+        },
+        {
+          year: 2007,
+          topSong: "Irreplaceable - Beyoncé",
+          topMovie: "Transformers",
+          popularTV: "The Office",
+          fashionTrend: "Leggings, oversized sweaters",
+          tech: "The iPhone is released",
+          culturalEvent: "The Virginia Tech shooting",
+        },
+        {
+          year: 2008,
+          topSong: "Low - Flo Rida ft. T-Pain",
+          topMovie: "The Dark Knight",
+          popularTV: "Mad Men",
+          fashionTrend: "Skinny jeans, studded belts",
+          tech: "The global financial crisis",
+          culturalEvent: "Barack Obama elected President",
+        },
+        {
+          year: 2009,
+          topSong: "I Gotta Feeling - The Black Eyed Peas",
+          topMovie: "Avatar",
+          popularTV: "Glee",
+          fashionTrend: "High-waisted jeans, plaid",
+          tech: "The first 3D movies gain popularity",
+          culturalEvent: "Michael Jackson's death",
+        },
+        {
+          year: 2010,
+          topSong: "Love the Way You Lie - Eminem ft. Rihanna",
+          topMovie: "Avatar",
+          popularTV: "Breaking Bad",
+          fashionTrend: "Skinny jeans, flannel",
+          tech: "The rise of smartphones",
+          culturalEvent: "The Deepwater Horizon oil spill",
+        },
+        {
+          year: 2011,
+          topSong: "Rolling in the Deep - Adele",
+          topMovie: "Harry Potter and the Deathly Hallows – Part 2",
+          popularTV: "Game of Thrones",
+          fashionTrend: "Bohemian chic, bright colors",
+          tech: "The rise of tablet devices",
+          culturalEvent: "Osama bin Laden killed in a U.S. raid",
+        },
+        {
+          year: 2012,
+          topSong: "Somebody That I Used to Know - Gotye ft. Kimbra",
+          topMovie: "The Avengers",
+          popularTV: "Breaking Bad",
+          fashionTrend: "Athleisure, crop tops",
+          tech: "Instagram is launched",
+          culturalEvent: "The Sandy Hook Elementary School shooting",
+        },
+        {
+          year: 2013,
+          topSong: "Blurred Lines - Robin Thicke ft. T.I. & Pharrell",
+          topMovie: "Frozen",
+          popularTV: "Game of Thrones",
+          fashionTrend: "Flannel shirts, skinny jeans",
+          tech: "The rise of streaming services like Netflix",
+          culturalEvent: "Edward Snowden leaks NSA surveillance programs",
+        },
+        {
+          year: 2014,
+          topSong: "Shake It Off - Taylor Swift",
+          topMovie: "Guardians of the Galaxy",
+          popularTV: "The Big Bang Theory",
+          fashionTrend: "Maxi skirts, skinny jeans",
+          tech: "The rise of smartwatches",
+          culturalEvent: "The Ebola outbreak in West Africa",
+        },
+        {
+          year: 2015,
+          topSong: "Uptown Funk - Mark Ronson ft. Bruno Mars",
+          topMovie: "Star Wars: The Force Awakens",
+          popularTV: "Making a Murderer",
+          fashionTrend: "Athleisure, high-waisted jeans",
+          tech: "The launch of Apple Watch",
+          culturalEvent: "The Paris climate agreement",
+        },
+        {
+          year: 2016,
+          topSong: "Shape of You - Ed Sheeran",
+          topMovie: "Captain America: Civil War",
+          popularTV: "Stranger Things",
+          fashionTrend: "Vintage fashion, distressed jeans",
+          tech: "Virtual reality technology advances",
+          culturalEvent: "Brexit vote (UK votes to leave the EU)",
+        },
+        {
+          year: 2017,
+          topSong: "Despacito - Luis Fonsi ft. Daddy Yankee",
+          topMovie: "Star Wars: The Last Jedi",
+          popularTV: "Game of Thrones",
+          fashionTrend: "Puffer jackets, athleisure",
+          tech: "Cryptocurrency boom (Bitcoin reaches new heights)",
+          culturalEvent: "The #MeToo movement",
+        },
+        {
+          year: 2018,
+          topSong: "God's Plan - Drake",
+          topMovie: "Avengers: Infinity War",
+          popularTV: "Stranger Things",
+          fashionTrend: "Neon colors, oversized blazers",
+          tech: "5G technology begins to roll out",
+          culturalEvent: "The U.S. moves its embassy to Jerusalem",
+        },
+        {
+          year: 2019,
+          topSong: "Old Town Road - Lil Nas X",
+          topMovie: "Avengers: Endgame",
+          popularTV: "Game of Thrones",
+          fashionTrend: "Chunky sneakers, tie-dye",
+          tech: "5G networks are deployed worldwide",
+          culturalEvent: "The Notre-Dame Cathedral fire in Paris",
+        },
+        {
+          year: 2020,
+          topSong: "Blinding Lights - The Weeknd",
+          topMovie: "Tenet",
+          popularTV: "Tiger King",
+          fashionTrend: "Face masks, loungewear",
+          tech: "Remote work technology boom",
+          culturalEvent: "COVID-19 pandemic",
+        },
+        {
+          year: 2021,
+          topSong: "Butter - BTS",
+          topMovie: "Spider-Man: No Way Home",
+          popularTV: "Squid Game",
+          fashionTrend: "Sustainable fashion, oversized clothing",
+          tech: "Continued rise of virtual reality",
+          culturalEvent: "The U.S. Capitol insurrection",
+        },
+        {
+          year: 2022,
+          topSong: "As It Was - Harry Styles",
+          topMovie: "Top Gun: Maverick",
+          popularTV: "Stranger Things",
+          fashionTrend: "Y2K fashion revival",
+          tech: "AI advancements (e.g., ChatGPT)",
+          culturalEvent: "Russia invades Ukraine",
+        },
+        {
+          year: 2023,
+          topSong: "Flowers - Miley Cyrus",
+          topMovie: "Barbie",
+          popularTV: "The Bear",
+          fashionTrend: "Athleisure, maximalism",
+          tech: "Generative AI technologies (e.g., ChatGPT, DALL·E)",
+          culturalEvent: "Ongoing war in Ukraine, COP28 summit",
+        },
+      ];
+
+      let currentYearData;
+      let currentRound = 1;
+      let totalScore = 0;
+      let hintsUsed = 0;
+
+      // Function to start a new round with random year data
+      function startRound() {
+        const randomIndex = Math.floor(Math.random() * yearData.length);
+        currentYearData = yearData[randomIndex];
+
+        // Display the song and movie
+        document.getElementById("topSong").textContent =
+          "Top Song: " + currentYearData.topSong;
+        document.getElementById("topMovie").textContent =
+          "Top Movie: " + currentYearData.topMovie;
+
+        // Clear previous results and hints
+        document.getElementById("result").textContent = "";
+        document.getElementById("yearGuess").value = "";
+        document.getElementById("nextButton").style.display = "none";
+        document.getElementById("hintList").innerHTML = ""; // Clear used hints list
+        resetHintButtons(); // Re-enable hint buttons
+      }
+
+      // Function to reset all hint buttons to enabled
+      function resetHintButtons() {
+        const hintButtons = document.querySelectorAll(".hint-button");
+        hintButtons.forEach((button) => (button.disabled = false)); // Re-enable all hint buttons
+      }
+
+      // Function to check user's guess and calculate score
+      function checkGuess() {
+        const userGuess = parseInt(document.getElementById("yearGuess").value);
+        let score = 0;
+
+        if (userGuess === currentYearData.year) {
+          score = 100; // Exact match
+          document.getElementById("result").textContent = "Correct! 🎉";
+          document.getElementById("result").classList.add("correct");
+          document.getElementById("result").classList.remove("incorrect");
+        } else if (Math.abs(userGuess - currentYearData.year) <= 2) {
+          score = 50; // Close guess
+          document.getElementById("result").textContent = `Close! 🎯. The correct year was ${currentYearData.year}.`;
+          document.getElementById("result").classList.add("incorrect");
+          document.getElementById("result").classList.remove("correct");
+        } else if (Math.abs(userGuess - currentYearData.year) <= 5) {
+          score = 25; // Within 5 years
+          document.getElementById("result").textContent = `Almost. 🎯. The correct year was ${currentYearData.year}.`;
+          document.getElementById("result").classList.add("incorrect");
+          document.getElementById("result").classList.remove("correct");
+        } else {
+          score = 0; // Far off
+          document.getElementById(
+            "result"
+          ).textContent = `Incorrect! The correct year was ${currentYearData.year}.`;
+          document.getElementById("result").classList.add("incorrect");
+          document.getElementById("result").classList.remove("correct");
+        }
+
+        // Subtract points for any hints used
+        score = Math.max(score - 5 * hintsUsed, 0);
+        totalScore += score;
+        document.getElementById("score").textContent = "Score: " + totalScore;
+
+        // Show next button to start a new round
+        document.getElementById("nextButton").style.display = "inline-block";
+      }
+
+      // Function to request a hint and show it to the user
+      function requestHint(category) {
+        if (hintsUsed < 4) {
+          hintsUsed++;
+
+          // Append the hint to the used hints list
+          const hintText = `${
+            category.charAt(0).toUpperCase() + category.slice(1)
+          }: ${currentYearData[category]}`;
+          const hintItem = document.createElement("li");
+          hintItem.textContent = hintText;
+          document.getElementById("hintList").appendChild(hintItem);
+
+          // Disable the requested hint button
+          const hintButton = document.querySelector(
+            `button[onclick="requestHint('${category}')"]`
+          );
+          hintButton.disabled = true;
+        }
+      }
+
+      // Function to move to the next round
+      function nextRound() {
+        if (currentRound < 5) {
+          currentRound++;
+          document.getElementById("round").textContent =
+            "Round: " + currentRound + "/5";
+          startRound();
+          hintsUsed = 0; // Reset hints used
+        } else {
+          document.getElementById(
+            "result"
+          ).textContent = `Game Over! Final Score: ${totalScore}`;
+          document.getElementById("nextButton").style.display = "none";
+          document.getElementById("round").style.display = "none"; // Hide round counter
+        }
+      }
+
+      // Start the first round when the page loads
+      startRound();
+    </script>
+  </body>
+</html>
